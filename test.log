@@ -1,0 +1,40 @@
+**********************
+PowerShell transcript start
+Start time: 20250217172917
+Username: AzureAD\PaulDantignac
+RunAs User: AzureAD\PaulDantignac
+Configuration Name: 
+Machine: DESKTOP-2M7F6RT (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\Program Files\PowerShell\7\pwsh.dll -NoProfile -ExecutionPolicy Bypass -Command Import-Module 'c:\Users\PaulDantignac\.vscode\extensions\ms-vscode.powershell-2025.0.0\modules\PowerShellEditorServices\PowerShellEditorServices.psd1'; Start-EditorServices -HostName 'Visual Studio Code Host' -HostProfileId 'Microsoft.VSCode' -HostVersion '2025.0.0' -BundledModulesPath 'c:\Users\PaulDantignac\.vscode\extensions\ms-vscode.powershell-2025.0.0\modules' -EnableConsoleRepl -StartupBanner "PowerShell Extension v2025.0.0
+Copyright (c) Microsoft Corporation.
+
+https://aka.ms/vscode-powershell
+Type 'help' to get help.
+" -LogLevel 'Warning' -LogPath 'c:\Users\PaulDantignac\AppData\Roaming\Code\logs\20250217T072405\window1\exthost\ms-vscode.powershell' -SessionDetailsPath 'c:\Users\PaulDantignac\AppData\Roaming\Code\User\globalStorage\ms-vscode.powershell\sessions\PSES-VSCode-13316-578283.json' -FeatureFlags @() 
+Process ID: 32176
+PSVersion: 7.5.0
+PSEdition: Core
+GitCommitId: 7.5.0
+OS: Microsoft Windows 10.0.26100
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+Transcript started, output file is .\test.log
+Add-Content: C:\Users\PaulDantignac\projects\PowerShell\Entra_Intune\win32apps\test.ps1:45:5
+Line |
+  45 |      Add-Content -Path $logFile -Value $Content
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The process cannot access the file 'C:\Users\PaulDantignac\projects\test.log' because it is being used by another process.
+Add-Content: C:\Users\PaulDantignac\projects\PowerShell\Entra_Intune\win32apps\test.ps1:45:5
+Line |
+  45 |      Add-Content -Path $logFile -Value $Content
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The process cannot access the file 'C:\Users\PaulDantignac\projects\test.log' because it is being used by another process.
+
+**********************
+PowerShell transcript end
+End time: 20250217172917
+**********************

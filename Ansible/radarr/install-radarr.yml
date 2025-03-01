@@ -1,0 +1,151 @@
+---
+- name: Install and configure Radarr on Debian 12
+  hosts: all
+  become: yes
+
+  vars:
+    # If you need to change the data directory, update this variable.
+    radarr_data_dir: "/vat/lib/radarr"
+
+  tasks:
+    - name: Ensure required packages are installed
+      apt:
+        name:
+          - curl
+          - tar
+          - jq
+        state: present
+        update_cache: yes
+
+    - name: Ensure "media" group exists
+      group:
+        name: media
+        state: present
+
+    - name: Ensure "radarr" system user exists
+      user:
+        name: radarr
+        group: media
+        system: yes
+        create_home: no
+        shell: /usr/sbin/nologin
+
+    - name: Create Radarr installation directory
+      file:
+        path: /opt/Radarr
+        state: directory
+        owner: radarr
+        group: media
+        mode: "0755"
+
+    - name: Create Radarr data directory
+      file:
+        path: "{{ radarr_data_dir }}"
+        state: directory
+        owner: radarr
+        group: media
+        mode: "0755"
+
+    - name: Get latest Radarr release info from GitHub
+      uri:
+        url: https://api.github.com/repos/Radarr/Radarr/releases/latest
+        return_content: yes
+      register: radarr_release
+
+    - name: Set Radarr download URL fact
+      set_fact:
+        radarr_asset: "{{ radarr_release.json.assets | selectattr('name', 'search', 'linux.tar.gz') | list | first }}"
+        radarr_download_url: "{{ radarr_asset.browser_download_url }}"
+
+    - name: Download Radarr tarball from GitHub
+      get_url:
+        url: "{{ radarr_download_url }}"
+        dest: /tmp/radarr.tar.gz
+        mode: "0644"
+
+    - name: Extract Radarr tarball to installation directory
+      unarchive:
+        src: /tmp/radarr.tar.gz
+        dest: /opt/Radarr
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+      notify: Restart Radarr
+
+    - name: Ensure proper permissions for Radarr installation
+      file:
+        path: /opt/Radarr
+        recurse: yes
+        owner: radarr
+        group: media
+
+    - name: Create systemd service file for Radarr
+      copy:
+        dest: /etc/systemd/system/radarr.service
+        content: |
+          [Unit]
+          Description=Radarr Daemon
+          After=syslog.target network.target
+
+          [Service]
+          User=radarr
+          Group=media
+          Type=simple
+          ExecStart=/opt/Radarr/Radarr -nobrowser -data={{ radarr_data_dir }}
+          TimeoutStopSec=20
+          KillMode=process
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Reload systemd
+
+    - name: Enable and start Radarr service
+      systemd:
+        name: radarr
+        enabled: yes
+        state: started
+
+    - name: Create Radarr auto-update script
+      copy:
+        dest: /usr/local/bin/update_radarr.sh
+        content: |
+          #!/bin/bash
+          set -e
+          echo "Fetching latest Radarr release..."
+          latest_url=$(curl -s https://api.github.com/repos/Radarr/Radarr/releases/latest | jq -r '.assets[] | select(.name|test("linux.tar.gz$")) | .browser_download_url')
+          tmpfile=$(mktemp /tmp/radarr.XXXXXX.tar.gz)
+          curl -L -o "$tmpfile" "$latest_url"
+          echo "Stopping Radarr service..."
+          systemctl stop radarr
+          echo "Updating Radarr..."
+          rm -rf /opt/Radarr/*
+          tar -xzf "$tmpfile" -C /opt/Radarr --strip-components=1
+          chown -R radarr:media /opt/Radarr
+          echo "Starting Radarr service..."
+          systemctl start radarr
+          rm "$tmpfile"
+          echo "Radarr updated successfully."
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Set up daily auto-update cron job for Radarr
+      cron:
+        name: "Radarr auto-update"
+        minute: "0"
+        hour: "3"
+        job: "/usr/local/bin/update_radarr.sh >> /var/log/radarr-update.log 2>&1"
+
+  handlers:
+    - name: Reload systemd
+      command: systemctl daemon-reload
+      become: yes
+
+    - name: Restart Radarr
+      systemd:
+        name: radarr
+        state: restarted
