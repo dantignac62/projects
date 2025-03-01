@@ -1,5 +1,5 @@
 # Connect to Microsoft Graph with required scope
-#Connect-MgGraph -Scopes 'Group.ReadWrite.All'
+Connect-MgGraph -Scopes 'Group.ReadWrite.All'
 
 # Define the Autopilot groups with their OrderIDs
 $autopilotGroups = @(
